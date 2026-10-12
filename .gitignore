@@ -1,0 +1,7 @@
+.env
+secrets/*
+!secrets/.gitkeep
+airflow/logs/
+__pycache__/
+*.pyc
+.idea/
