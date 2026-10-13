@@ -5,3 +5,4 @@ airflow/logs/
 __pycache__/
 *.pyc
 .idea/
+.venv/
