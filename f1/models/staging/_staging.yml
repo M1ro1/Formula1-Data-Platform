@@ -1,0 +1,103 @@
+version: 2
+
+models:
+  - name: stg_f1_races
+    columns:
+      - name: race_id
+        data_tests: [unique, not_null]
+      - name: race_date
+        data_tests: [not_null]
+
+  - name: stg_f1_results
+    columns:
+      - name: result_id
+        data_tests: [unique, not_null]
+      - name: race_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_f1_races')
+              field: race_id
+      - name: driver_id
+        data_tests: [not_null]
+      - name: constructor_id
+        data_tests: [not_null]
+      - name: points
+        data_tests: [not_null]
+
+  - name: stg_f1_circuits
+    columns:
+      - name: circuit_id
+        data_tests: [unique, not_null]
+      - name: circuit_name
+        data_tests: [not_null]
+      - name: country
+        data_tests: [not_null]
+
+  - name: stg_f1_constructors
+    columns:
+      - name: constructor_id
+        data_tests: [unique, not_null]
+      - name: constructor_name
+        data_tests: [not_null]
+
+  - name: stg_f1_drivers
+    columns:
+      - name: driver_id
+        data_tests: [unique, not_null]
+
+  - name: stg_f1_laps
+    columns:
+      - name: lap_time_id
+        data_tests: [unique, not_null]
+      - name: race_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_f1_races')
+              field: race_id
+      - name: driver_id
+        data_tests: [not_null]
+      - name: lap_number
+        data_tests: [not_null]
+      - name: position
+        data_tests: [not_null]
+
+  - name: stg_f1_pit_stops
+    columns:
+      - name: pit_stop_id
+        data_tests: [unique, not_null]
+      - name: race_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_f1_races')
+              field: race_id
+      - name: driver_id
+        data_tests: [not_null]
+      - name: stop_number
+        data_tests: [not_null]
+      - name: lap_number
+        data_tests: [not_null]
+
+  - name: stg_f1_qualifying
+    columns:
+      - name: qualifying_id
+        data_tests: [unique, not_null]
+      - name: race_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_f1_races')
+              field: race_id
+      - name: driver_id
+        data_tests: [not_null]
+      - name: constructor_id
+        data_tests: [not_null]
+      - name: qualifying_position
+        data_tests: [not_null]
+
+  - name: stg_f1_seasons
+    columns:
+      - name: season
+        data_tests: [unique, not_null]

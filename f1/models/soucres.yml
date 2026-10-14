@@ -1,0 +1,43 @@
+version: 2
+
+sources:
+  - name: raw_f1
+    database: F1_DWH
+    schema: RAW
+    tables:
+      - name: races
+        identifier: RAW_RACES
+        config:
+          loaded_at_field: _loaded_at
+      - name: results
+        identifier: RAW_RESULTS
+        config:
+          loaded_at_field: _loaded_at
+      - name: circuits
+        identifier: RAW_CIRCUITS
+        config:
+          loaded_at_field: _loaded_at
+      - name: constructors
+        identifier: RAW_CONSTRUCTORS
+        config:
+          loaded_at_field: _loaded_at
+      - name: drivers
+        identifier: RAW_DRIVERS
+        config:
+          loaded_at_field: _loaded_at
+      - name: laps
+        identifier: RAW_LAPS
+        config:
+          loaded_at_field: _loaded_at
+      - name: pit_stops
+        identifier: RAW_PIT_STOPS
+        config:
+          loaded_at_field: _loaded_at
+      - name: qualifying
+        identifier: RAW_QUALIFYING
+        config:
+          loaded_at_field: _loaded_at
+      - name: seasons
+        identifier: RAW_SEASONS
+        config:
+          loaded_at_field: _loaded_at
