@@ -2,7 +2,9 @@
 secrets/*
 !secrets/.gitkeep
 airflow/logs/
+airflow/data/
 __pycache__/
 *.pyc
 .idea/
 .venv/
+data/

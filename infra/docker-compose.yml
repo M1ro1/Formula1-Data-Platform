@@ -24,6 +24,7 @@ x-airflow-common: &airflow-common
     - ../airflow/include:/opt/airflow/include
     - ../airflow/logs:/opt/airflow/logs
     - ../secrets:/opt/airflow/secrets:ro
+    - ../data:/opt/airflow/data
 
 services:
   postgres:
