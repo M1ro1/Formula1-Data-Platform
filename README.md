@@ -130,7 +130,7 @@ One table per API entity, storing the response as-is:
 |---|---|---|
 | `f1_ingest_reference` | weekly | Load slowly changing reference data (drivers, constructors, circuits, seasons) |
 | `f1_ingest_season_backfill` | manual, param `season` | Backfill a full season; dynamic task mapping over race rounds |
-| `f1_ingest_incremental` | weekly / race-weekend | Detect and load new races, results, qualifying, pit stops, lap times |
+| `f1_ingest_incremental.py` | weekly / race-weekend | Detect and load new races, results, qualifying, pit stops, lap times |
 | `f1_dbt_build` | dataset-triggered | Run dbt models via Cosmos after ingestion completes |
 | `f1_data_quality` | daily | Run freshness and volume checks, alert on failures |
 
