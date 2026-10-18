@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: mart_driver_season_stats
+    description: >
+      Driver statistics per season. Points are race points only (sprint points are not loaded),
+      so they may differ from official championship totals in sprint seasons.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [season, driver_key]
+    columns:
+      - name: season
+        tests: [not_null]
+      - name: driver_key
+        tests:
+          - not_null
+          - relationships: {to: "ref('dim_driver')", field: driver_key}
+      - name: races_entered
+        tests:
+          - dbt_utils.accepted_range: {min_value: 1}
+      - name: race_points
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+      - name: wins
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+
+  - name: mart_constructor_standings
+    description: >
+      Constructor statistics per season (race points only, sprint points are not loaded).
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [season, constructor_key]
+    columns:
+      - name: constructor_key
+        tests:
+          - not_null
+          - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+      - name: classified_rate
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 1}
+      - name: race_points
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+
+  - name: mart_pit_stop_performance
+    description: >
+      Pit-stop statistics per constructor per season. Stops longer than the
+      pit_stop_outlier_seconds variable (default 60) are excluded from the clean average.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [season, constructor_key]
+    columns:
+      - name: constructor_key
+        tests:
+          - not_null
+          - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+      - name: pit_stops
+        tests:
+          - dbt_utils.accepted_range: {min_value: 1}
