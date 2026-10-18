@@ -22,7 +22,7 @@ renamed as (
         p.value:stop::int                                               as stop_number,
         p.value:lap::int                                                as lap_number,
         try_to_time(p.value:time::string)                               as pit_time,
-        p.value:duration::float                                         as duration_seconds
+        {{ lap_time_to_seconds('p.value:duration::varchar') }}          as duration_seconds
 
     from source sp,
         lateral flatten(input => sp.payload:RaceTable.Races) r,

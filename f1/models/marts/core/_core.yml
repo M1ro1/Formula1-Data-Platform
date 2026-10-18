@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: dim_driver
+    description: One row per driver.
+    columns:
+      - name: driver_key
+        description: Surrogate key (hash of driver_id).
+        tests: [unique, not_null]
+      - name: driver_id
+        description: Natural key from the API.
+        tests: [unique, not_null]
+
+  - name: dim_constructor
+    description: One row per constructor (team).
+    columns:
+      - name: constructor_key
+        tests: [unique, not_null]
+      - name: constructor_id
+        tests: [unique, not_null]
+
+  - name: dim_circuit
+    description: One row per circuit.
+    columns:
+      - name: circuit_key
+        tests: [unique, not_null]
+      - name: circuit_id
+        tests: [unique, not_null]
+
+  - name: dim_race
+    description: One row per race (grand prix weekend), with the weekend schedule.
+    columns:
+      - name: race_key
+        tests: [unique, not_null]
+      - name: race_id
+        description: Natural key, "<season>-<round>".
+        tests: [unique, not_null]
+      - name: circuit_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_circuit')
+              field: circuit_key
+      - name: race_date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+  - name: dim_date
+    description: Calendar dimension, one row per day.
+    columns:
+      - name: date_key
+        description: Date as an integer, YYYYMMDD.
+        tests: [unique, not_null]
