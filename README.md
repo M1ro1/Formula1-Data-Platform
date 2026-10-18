@@ -114,7 +114,7 @@ One table per API entity, storing the response as-is:
 - `dim_driver`
 - `dim_constructor`
 - `dim_circuit`
-- `dim_race`
+- `dim_race.sql`
 - `dim_date`
 - `dim_driver_team_history` — SCD Type 2 (built from a dbt snapshot), tracks which constructor a driver raced for over time
 
