@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: dim_driver_team_history
+    description: >
+      SCD2 history of driver -> constructor. One row per continuous stint.
+      valid_from is inclusive, valid_to is exclusive (NULL for the latest stint).
+    columns:
+      - name: driver_team_history_key
+        tests: [unique, not_null]
+      - name: driver_key
+        tests:
+          - not_null
+          - relationships: {to: "ref('dim_driver')", field: driver_key}
+      - name: constructor_key
+        tests:
+          - not_null
+          - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+      - name: valid_from
+        tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [driver_key, valid_from]
