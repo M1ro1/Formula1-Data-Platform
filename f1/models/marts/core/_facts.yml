@@ -2,94 +2,227 @@ version: 2
 
 models:
   - name: fct_race_results
-    description: "Grain: one row per driver per race."
+    description: "Grain: one row per driver per race. Main fact table for race outcomes."
     columns:
       - name: result_key
+        description: Surrogate key of the result (hash of `result_id`).
         tests: [unique, not_null]
+      - name: result_id
+        description: 'Natural key, "<season>-<round>-<driver_id>".'
       - name: race_key
+        description: "{{ doc('race_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_race')", field: race_key}
+          - relationships:
+              to: ref('dim_race')
+              field: race_key
       - name: driver_key
+        description: "{{ doc('driver_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_driver')", field: driver_key}
+          - relationships:
+              to: ref('dim_driver')
+              field: driver_key
       - name: constructor_key
+        description: "{{ doc('constructor_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+          - relationships:
+              to: ref('dim_constructor')
+              field: constructor_key
       - name: race_date_key
+        description: "{{ doc('race_date_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_date')", field: date_key}
-      - name: points
-        tests:
-          - dbt_utils.accepted_range: {min_value: 0}
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: season
+        description: "{{ doc('season') }}"
+      - name: round
+        description: "{{ doc('round') }}"
+      - name: driver_number
+        description: Number on the car in this race (can differ from the driver's permanent number, e.g. the champion's 1).
       - name: grid_position
+        description: Starting grid position. 0 means a pit-lane start / no grid slot.
         tests:
-          - dbt_utils.accepted_range: {min_value: 0}
+          - dbt_utils.accepted_range:
+              min_value: 0
       - name: finish_position
+        description: Position in the results table. For drivers who were not classified it is only the order in the table, not a real finishing position (see `is_classified`).
         tests:
-          - dbt_utils.accepted_range: {min_value: 1}
+          - dbt_utils.accepted_range:
+              min_value: 1
+      - name: position_text
+        description: Finishing position as text. A number for classified drivers, or a letter code such as R (retired), D (disqualified), W (withdrawn).
+      - name: status
+        description: Finishing status as reported by the API (e.g. Finished, Lapped, Retired, or a technical reason).
+      - name: points
+        description: "{{ doc('race_points_note') }}"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: completed_laps
+        description: Number of laps completed.
+      - name: race_time_millis
+        description: Total race time in milliseconds. Kept only when status is `Finished`, because the source value is not reliable for lapped cars.
+      - name: fastest_lap_rank
+        description: Rank of the driver's fastest lap among all drivers in the race (1 = fastest overall).
+      - name: fastest_lap_number
+        description: Lap on which the driver set their fastest lap.
+      - name: fastest_lap_time_seconds
+        description: Fastest lap time in seconds.
+      - name: fastest_lap_avg_speed_kph
+        description: Average speed of the fastest lap, km/h.
+      - name: is_classified
+        description: "{{ doc('is_classified') }}"
+      - name: is_winner
+        description: True for the race winner (classified and finished first).
+      - name: is_podium
+        description: True for a classified finish in the top 3.
+      - name: is_points_finish
+        description: True when the driver scored points in the race.
+      - name: has_fastest_lap
+        description: True when the driver set the fastest lap of the race.
+      - name: positions_gained
+        description: Grid position minus finish position for classified drivers (positive = places gained). NULL for pit-lane starts and non-classified drivers.
 
   - name: fct_qualifying
-    description: "Grain: one row per driver per race (qualifying session)."
+    description: "Grain: one row per driver per race (qualifying session). Times are in seconds."
     columns:
       - name: qualifying_key
+        description: Surrogate key (hash of `race_id` and `driver_id`).
         tests: [unique, not_null]
       - name: race_key
+        description: "{{ doc('race_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_race')", field: race_key}
+          - relationships:
+              to: ref('dim_race')
+              field: race_key
       - name: driver_key
+        description: "{{ doc('driver_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_driver')", field: driver_key}
+          - relationships:
+              to: ref('dim_driver')
+              field: driver_key
       - name: constructor_key
+        description: "{{ doc('constructor_key') }}"
         tests:
-          - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+          - relationships:
+              to: ref('dim_constructor')
+              field: constructor_key
       - name: race_date_key
+        description: "{{ doc('race_date_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_date')", field: date_key}
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: season
+        description: "{{ doc('season') }}"
+      - name: round
+        description: "{{ doc('round') }}"
+      - name: driver_number
+        description: Number on the car.
+      - name: qualifying_position
+        description: Final qualifying position (1 = pole).
+      - name: q1_seconds
+        description: Best lap time in Q1, seconds.
+      - name: q2_seconds
+        description: Best lap time in Q2, seconds (NULL if the driver was eliminated in Q1).
+      - name: q3_seconds
+        description: Best lap time in Q3, seconds (NULL if the driver did not reach Q3).
+      - name: best_qualifying_seconds
+        description: Fastest of the Q1, Q2 and Q3 times that exist.
+      - name: reached_q2
+        description: True when the driver set a Q2 time.
+      - name: reached_q3
+        description: True when the driver set a Q3 time.
 
   - name: fct_pit_stops
     description: "Grain: one row per pit stop."
     columns:
       - name: pit_stop_key
+        description: Surrogate key (hash of `race_id`, `driver_id` and `stop_number`).
         tests: [unique, not_null]
       - name: race_key
+        description: "{{ doc('race_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_race')", field: race_key}
+          - relationships:
+              to: ref('dim_race')
+              field: race_key
       - name: driver_key
+        description: "{{ doc('driver_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_driver')", field: driver_key}
+          - relationships:
+              to: ref('dim_driver')
+              field: driver_key
       - name: constructor_key
-        description: Team from the race result; NULL if the result is not loaded.
+        description: "The driver's team taken from the race result (the pit-stop endpoint has no team). NULL if the result is not loaded."
         tests:
           - relationships:
-              to: "ref('dim_constructor')"
+              to: ref('dim_constructor')
               field: constructor_key
-              config: {severity: warn}
+              config:
+                severity: warn
+      - name: race_date_key
+        description: "{{ doc('race_date_key') }}"
+      - name: season
+        description: "{{ doc('season') }}"
+      - name: round
+        description: "{{ doc('round') }}"
+      - name: stop_number
+        description: Sequence number of the stop for the driver in this race (1 = first stop).
+      - name: lap_number
+        description: Lap on which the stop happened.
       - name: duration_seconds
+        description: Pit-lane time in seconds. Can be very long for stops under red flags or with repairs.
         tests:
-          - dbt_utils.accepted_range: {min_value: 0, inclusive: false}
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
 
   - name: fct_lap_times
-    description: "Grain: one row per driver per lap per race. Incremental (merge)."
+    description: >
+      Grain: one row per driver per lap per race. Incremental (merge on `lap_time_key`).
+      The constructor is not stored here; join `fct_race_results` on `race_key` and `driver_key`.
     columns:
       - name: lap_time_key
+        description: Surrogate key (hash of `race_id`, `driver_id` and `lap_number`).
         tests: [unique, not_null]
       - name: race_key
+        description: "{{ doc('race_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_race')", field: race_key}
+          - relationships:
+              to: ref('dim_race')
+              field: race_key
       - name: driver_key
+        description: "{{ doc('driver_key') }}"
         tests:
           - not_null
-          - relationships: {to: "ref('dim_driver')", field: driver_key}
+          - relationships:
+              to: ref('dim_driver')
+              field: driver_key
+      - name: race_date_key
+        description: "{{ doc('race_date_key') }}"
+      - name: season
+        description: "{{ doc('season') }}"
+      - name: round
+        description: "{{ doc('round') }}"
+      - name: lap_number
+        description: Lap number within the race.
+      - name: position
+        description: Race position of the driver at the end of this lap.
       - name: lap_time_seconds
+        description: Lap time in seconds.
         tests:
-          - dbt_utils.accepted_range: {min_value: 0, inclusive: false}
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: loaded_at
+        description: When the underlying raw row was loaded into Snowflake. Used as the incremental watermark.

@@ -3,47 +3,107 @@ version: 2
 models:
   - name: mart_driver_season_stats
     description: >
-      Driver statistics per season. Points are race points only (sprint points are not loaded),
-      so they may differ from official championship totals in sprint seasons.
+      Driver statistics per season, built from `fct_race_results` and `fct_qualifying`.
+            Points are race points only (sprint points are not loaded).
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [season, driver_key]
     columns:
       - name: season
+        description: "{{ doc('season') }}"
         tests: [not_null]
       - name: driver_key
+        description: "{{ doc('driver_key') }}"
         tests:
           - not_null
           - relationships: {to: "ref('dim_driver')", field: driver_key}
+      - name: driver_id
+        description: Natural key of the driver.
+      - name: driver_code
+        description: Three-letter driver code.
+      - name: driver_full_name
+        description: Driver's full name.
       - name: races_entered
+        description: Number of races the driver took part in.
         tests:
-          - dbt_utils.accepted_range: {min_value: 1}
-      - name: race_points
-        tests:
-          - dbt_utils.accepted_range: {min_value: 0}
+          - dbt_utils.accepted_range:
+              min_value: 1
       - name: wins
+        description: Number of race wins.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: podiums
+        description: Number of classified top-3 finishes.
+      - name: points_finishes
+        description: Number of races in which the driver scored points.
+      - name: fastest_laps
+        description: Number of fastest laps of the race.
+      - name: not_classified
+        description: Number of races in which the driver was not classified (retirements, disqualifications, ...).
+      - name: race_points
+        description: "{{ doc('race_points_note') }}"
         tests:
           - dbt_utils.accepted_range: {min_value: 0}
+      - name: avg_grid_position
+        description: Average starting position (pit-lane starts excluded).
+      - name: avg_finish_position
+        description: Average finishing position over classified finishes.
+      - name: best_finish_position
+        description: Best classified finishing position.
+      - name: total_positions_gained
+        description: Sum of places gained between grid and finish (classified finishes only).
+      - name: poles
+        description: Number of pole positions. NULL when no qualifying data is loaded for the season.
+      - name: rank_by_race_points
+        description: Rank within the season by race points, ties broken by wins. Not the official championship position.
 
   - name: mart_constructor_standings
     description: >
-      Constructor statistics per season (race points only, sprint points are not loaded).
+      Constructor statistics per season, built from `fct_race_results`.
+      Points are race points only (sprint points are not loaded).
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [season, constructor_key]
     columns:
+      - name: season
+        description: "{{ doc('season') }}"
+        tests: [not_null]
       - name: constructor_key
+        description: "{{ doc('constructor_key') }}"
         tests:
           - not_null
           - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+      - name: constructor_id
+        description: Natural key of the constructor.
+      - name: constructor_name
+        description: Team name.
+      - name: races
+        description: Number of races the team took part in.
+      - name: car_entries
+        description: Number of car entries (up to two per race).
+      - name: wins
+        description: Number of race wins.
+      - name: podiums
+        description: Number of classified top-3 finishes.
+      - name: fastest_laps
+        description: Number of fastest laps of the race.
+      - name: race_points
+        description: "{{ doc('race_points_note') }}"
+        tests:
+            - dbt_utils.accepted_range: {min_value: 0}
+      - name: classified_finishes
+        description: Number of car entries that were classified.
       - name: classified_rate
+        description: Share of car entries that were classified (0 to 1), a rough reliability indicator.
         tests:
           - dbt_utils.accepted_range: {min_value: 0, max_value: 1}
-      - name: race_points
-        tests:
-          - dbt_utils.accepted_range: {min_value: 0}
+      - name: avg_finish_position
+        description: Average finishing position over classified finishes.
+      - name: rank_by_race_points
+        description: Rank within the season by race points, ties broken by wins. Not the official championship position.
 
-  - name: mart_pit_stop_performance
+  - name: mart_pit_stop_perfomance 
     description: >
       Pit-stop statistics per constructor per season. Stops longer than the
       pit_stop_outlier_seconds variable (default 60) are excluded from the clean average.
@@ -51,10 +111,32 @@ models:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [season, constructor_key]
     columns:
+      - name: season
+        description: "{{ doc('season') }}"
+        tests: [not_null]
       - name: constructor_key
+        description: "{{ doc('constructor_key') }}"
         tests:
           - not_null
           - relationships: {to: "ref('dim_constructor')", field: constructor_key}
+      - name: constructor_id
+        description: Natural key of the constructor.
+      - name: constructor_name
+        description: Team name.
       - name: pit_stops
+        description: Number of pit stops with a known duration.
         tests:
-          - dbt_utils.accepted_range: {min_value: 1}
+          - dbt_utils.accepted_range:
+              min_value: 1
+      - name: races_with_stops
+        description: Number of races in which the team made at least one stop.
+      - name: outlier_stops
+        description: Number of stops longer than the outlier threshold.
+      - name: avg_clean_duration_seconds
+        description: Average pit-lane time in seconds, outliers excluded.
+      - name: median_duration_seconds
+        description: Median pit-lane time in seconds, all stops.
+      - name: fastest_stop_seconds
+        description: Fastest pit stop of the season for the team, seconds.
+      - name: rank_by_avg_clean_duration
+        description: Rank within the season by clean average duration (1 = fastest).

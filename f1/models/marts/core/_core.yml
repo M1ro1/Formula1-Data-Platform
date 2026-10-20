@@ -2,55 +2,150 @@ version: 2
 
 models:
   - name: dim_driver
-    description: One row per driver.
+    description: "One row per driver."
     columns:
       - name: driver_key
-        description: Surrogate key (hash of driver_id).
+        description: "{{ doc('driver_key') }}"
         tests: [unique, not_null]
       - name: driver_id
-        description: Natural key from the API.
+        description: Natural key from the API (e.g. `max_verstappen`).
         tests: [unique, not_null]
+      - name: driver_code
+        description: Three-letter timing code (e.g. `VER`). Can be missing for older drivers.
+      - name: driver_permanent_number
+        description: Permanent racing number chosen by the driver. Can be missing for older drivers.
+      - name: driver_given_name
+        description: First name.
+      - name: driver_family_name
+        description: Last name.
+      - name: driver_full_name
+        description: Given name and family name combined.
+      - name: driver_date_of_birth
+        description: Date of birth.
+      - name: driver_nationality
+        description: Nationality as reported by the API.
 
   - name: dim_constructor
-    description: One row per constructor (team).
+    description: "One row per constructor (team)."
     columns:
       - name: constructor_key
+        description: "{{ doc('constructor_key') }}"
         tests: [unique, not_null]
       - name: constructor_id
+        description: Natural key from the API (e.g. `red_bull`).
         tests: [unique, not_null]
+      - name: constructor_name
+        description: Team name.
+      - name: constructor_nationality
+        description: Nationality of the team.
 
   - name: dim_circuit
-    description: One row per circuit.
+    description: "One row per circuit."
     columns:
       - name: circuit_key
+        description: "{{ doc('circuit_key') }}"
         tests: [unique, not_null]
       - name: circuit_id
+        description: Natural key from the API (e.g. `bahrain`).
         tests: [unique, not_null]
+      - name: circuit_name
+        description: Official circuit name.
+      - name: circuit_locality
+        description: City or locality.
+      - name: circuit_country
+        description: Country.
+      - name: circuit_latitude
+        description: Latitude in decimal degrees.
+      - name: circuit_longitude
+        description: Longitude in decimal degrees.
 
   - name: dim_race
-    description: One row per race (grand prix weekend), with the weekend schedule.
+    description: "One row per race (grand prix weekend), including the weekend schedule. Times are UTC."
     columns:
       - name: race_key
+        description: "{{ doc('race_key') }}"
         tests: [unique, not_null]
       - name: race_id
-        description: Natural key, "<season>-<round>".
+        description: 'Natural key, "<season>-<round>".'
         tests: [unique, not_null]
-      - name: circuit_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_circuit')
-              field: circuit_key
+      - name: season
+        description: "{{ doc('season') }}"
+      - name: round
+        description: "{{ doc('round') }}"
+      - name: race_name
+        description: Name of the grand prix.
+      - name: race_date
+        description: Date of the race.
+      - name: race_time
+        description: Scheduled start time of the race (UTC). Can be missing for older races.
       - name: race_date_key
+        description: "{{ doc('race_date_key') }}"
         tests:
           - not_null
           - relationships:
               to: ref('dim_date')
               field: date_key
+      - name: circuit_key
+        description: "{{ doc('circuit_key') }}"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_circuit')
+              field: circuit_key
+      - name: first_practice_date
+        description: Date of free practice 1.
+      - name: first_practice_time
+        description: Start time of free practice 1 (UTC).
+      - name: second_practice_date
+        description: Date of free practice 2.
+      - name: second_practice_time
+        description: Start time of free practice 2 (UTC).
+      - name: third_practice_date
+        description: Date of free practice 3.
+      - name: third_practice_time
+        description: Start time of free practice 3 (UTC).
+      - name: qualifying_date
+        description: Date of qualifying.
+      - name: qualifying_time
+        description: Start time of qualifying (UTC).
+      - name: sprint_date
+        description: Date of the sprint race (NULL on non-sprint weekends).
+      - name: sprint_time
+        description: Start time of the sprint race (UTC).
+      - name: sprint_shootout_date
+        description: Date of the sprint shootout (2023 format only).
+      - name: sprint_shootout_time
+        description: Start time of the sprint shootout (UTC).
+      - name: sprint_qualifying_date
+        description: Date of sprint qualifying (2024 onwards).
+      - name: sprint_qualifying_time
+        description: Start time of sprint qualifying (UTC).
+      - name: has_sprint
+        description: True when the weekend includes a sprint race.
 
   - name: dim_date
-    description: Calendar dimension, one row per day.
+    description: "Calendar dimension, one row per day (1950-2030)."
     columns:
       - name: date_key
-        description: Date as an integer, YYYYMMDD.
+        description: Date as an integer, `YYYYMMDD`.
         tests: [unique, not_null]
+      - name: full_date
+        description: The calendar date.
+      - name: year
+        description: Calendar year.
+      - name: quarter
+        description: Quarter of the year (1-4).
+      - name: month
+        description: Month number (1-12).
+      - name: month_name
+        description: Abbreviated month name.
+      - name: day_of_month
+        description: Day of the month.
+      - name: iso_week
+        description: ISO week number.
+      - name: iso_day_of_week
+        description: ISO day of week, 1 = Monday ... 7 = Sunday.
+      - name: day_name
+        description: Abbreviated day name.
+      - name: is_weekend
+        description: True for Saturday and Sunday.

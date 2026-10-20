@@ -3,21 +3,44 @@ version: 2
 models:
   - name: dim_driver_team_history
     description: >
-      SCD2 history of driver -> constructor. One row per continuous stint.
-      valid_from is inclusive, valid_to is exclusive (NULL for the latest stint).
-    columns:
-      - name: driver_team_history_key
-        tests: [unique, not_null]
-      - name: driver_key
-        tests:
-          - not_null
-          - relationships: {to: "ref('dim_driver')", field: driver_key}
-      - name: constructor_key
-        tests:
-          - not_null
-          - relationships: {to: "ref('dim_constructor')", field: constructor_key}
-      - name: valid_from
-        tests: [not_null]
+      SCD Type 2 history of driver -> constructor, one row per continuous stint with the same
+      constructor. Built from race results (gaps and islands), so the history is complete
+      from the first load. `valid_from` is inclusive, `valid_to` is exclusive (NULL for the latest stint).
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [driver_key, valid_from]
+    columns:
+      - name: driver_team_history_key
+        description: Surrogate key (hash of `driver_key` and `valid_from`).
+        tests: [unique, not_null]
+      - name: driver_key
+        description: "{{ doc('driver_key') }}"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_driver')
+              field: driver_key
+      - name: constructor_key
+        description: "{{ doc('constructor_key') }}"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_constructor')
+              field: constructor_key
+      - name: stint_number
+        description: Sequence number of the stint for this driver (1 = first team in the data).
+      - name: valid_from
+        description: Date of the first race of the stint (inclusive).
+        tests: [not_null]
+      - name: valid_to
+        description: Start date of the next stint (exclusive). NULL for the latest stint.
+      - name: last_race_date
+        description: Date of the last race of the stint.
+      - name: first_season
+        description: First season of the stint.
+      - name: last_season
+        description: Last season of the stint.
+      - name: races_in_stint
+        description: Number of races the driver started for this constructor in the stint.
+      - name: is_latest_stint
+        description: True for the driver's most recent stint in the loaded data (not necessarily still active today).
