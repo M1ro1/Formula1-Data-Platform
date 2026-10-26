@@ -8,3 +8,7 @@ __pycache__/
 .idea/
 .venv/
 data/
+
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
