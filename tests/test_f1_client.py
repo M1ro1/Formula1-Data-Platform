@@ -4,9 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "airflow"))
 
-import pytest  # noqa: E402
-
-from include.f1_client import F1ApiError, F1Client  # noqa: E402
+import pytest
+from include.f1_client import F1ApiError, F1Client
 
 
 class FakeResponse:

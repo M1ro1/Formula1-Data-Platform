@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Iterable
 from datetime import date, timedelta
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from include.f1_loader import ENTITIES, load_entity
 
@@ -41,13 +42,13 @@ def label(item: dict[str, Any]) -> str:
 
 def load_partition(item: dict[str, Any]) -> dict[str, Any]:
     try:
+        from airflow.exceptions import AirflowException
         from airflow.operators.python import get_current_context
 
         get_current_context()["my_custom_map_index"] = label(item)
-    except Exception:
-        pass
+    except (AirflowException, KeyError, RuntimeError) as exc:
+        log.debug("Skipped custom map index assignment: %s", exc)
     return load_entity(item["entity"], item.get("season"), item.get("round"))
-
 
 def summarize_results(results: Iterable[dict[str, Any]]) -> dict[str, int]:
     results = list(results)

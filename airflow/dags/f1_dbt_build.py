@@ -4,7 +4,6 @@ from pathlib import Path
 import pendulum
 from airflow.datasets import Dataset
 from cosmos import DbtDag, ExecutionConfig, ProfileConfig, ProjectConfig
-
 from include.dag_helpers import DEFAULT_ARGS, RAW_DATASET_URI
 
 DBT_PROJECT_DIR = Path(os.getenv("F1_DBT_PROJECT_DIR", "/opt/airflow/dbt"))

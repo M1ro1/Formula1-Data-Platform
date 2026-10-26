@@ -3,6 +3,7 @@ import os
 
 import snowflake.connector
 
+
 def get_connection(**overrides):
     params = {
         "account": os.environ["SNOWFLAKE_ACCOUNT"],
