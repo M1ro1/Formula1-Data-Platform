@@ -6,6 +6,7 @@ exclude_rules = RF02, ST06, LT09
 
 [sqlfluff:templater:dbt]
 project_dir = ./f1
+profiles_dir = ./f1/airflow_profiles
 
 [sqlfluff:indentation]
 tab_space_size = 4
