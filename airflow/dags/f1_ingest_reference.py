@@ -1,8 +1,10 @@
 import pendulum
+from airflow.datasets import Dataset
 from airflow.decorators import dag, task
 
 from include.dag_helpers import (
     DEFAULT_ARGS,
+    RAW_DATASET_URI,
     LOAD_TASK_KWARGS,
     load_partition,
     make_item,
@@ -11,6 +13,7 @@ from include.dag_helpers import (
 
 REFERENCE_ENTITIES = ["seasons", "drivers", "constructors", "circuits"]
 
+RAW_DATASET = Dataset(RAW_DATASET_URI)
 
 @dag(
     dag_id="f1_ingest_reference",
@@ -27,7 +30,7 @@ def f1_ingest_reference():
     def load_one(item: dict) -> dict:
         return load_partition(item)
 
-    @task
+    @task(outlets=[RAW_DATASET])
     def summarize(res) -> dict:
         return summarize_results(res)
 

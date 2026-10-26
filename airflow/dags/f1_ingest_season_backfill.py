@@ -1,12 +1,14 @@
 import logging
 
 import pendulum
+from airflow.datasets import Dataset
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowFailException
 from airflow.models.param import Param
 
 from include.dag_helpers import (
     DEFAULT_ARGS,
+    RAW_DATASET_URI,
     LOAD_TASK_KWARGS,
     build_backfill_items,
     load_partition,
@@ -16,6 +18,9 @@ from include.dag_helpers import (
 from include.f1_loader import rounds_for_season
 
 log = logging.getLogger(__name__)
+
+
+RAW_DATASET = Dataset(RAW_DATASET_URI)
 
 
 @dag(
@@ -52,7 +57,7 @@ def f1_ingest_season_backfill():
     def load_one(item: dict) -> dict:
         return load_partition(item)
 
-    @task
+    @task(outlets=[RAW_DATASET])
     def summarize(results) -> dict:
         return summarize_results(results)
 
