@@ -34,6 +34,7 @@ jobs:
           AIRFLOW__CORE__UNIT_TEST_MODE: 'True'
         run: |
           pytest tests/test_dag_integrity.py
+          pytest tests/test_f1_client.py
 
       - name: dbt Parse & Compile Check
         env:
