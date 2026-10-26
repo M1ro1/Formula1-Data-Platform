@@ -6,7 +6,9 @@ from airflow.datasets import Dataset
 from cosmos import DbtDag, ExecutionConfig, ProfileConfig, ProjectConfig
 from include.dag_helpers import DEFAULT_ARGS, RAW_DATASET_URI
 
-DBT_PROJECT_DIR = Path(os.getenv("F1_DBT_PROJECT_DIR", "/opt/airflow/dbt"))
+DBT_PROJECT_DIR = Path(
+    os.getenv("F1_DBT_PROJECT_DIR") or os.getenv("DBT_PROJECT_PATH", "/opt/airflow/dbt")
+)
 DBT_PROFILES_FILE = Path(
     os.getenv("F1_DBT_PROFILES_FILE", str(DBT_PROJECT_DIR / "airflow_profiles" / "profiles.yml"))
 )
