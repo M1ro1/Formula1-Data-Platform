@@ -5,7 +5,12 @@ with qualifying as (
 ),
 
 races as (
-    select race_id, season, round, race_date_key from {{ ref('dim_race') }}
+    select
+        race_id,
+        season,
+        round,
+        race_date_key
+    from {{ ref('dim_race') }}
 ),
 
 prepared as (
@@ -20,21 +25,23 @@ prepared as (
         q.driver_number,
         q.qualifying_position,
 
-        {{ lap_time_to_seconds('q.q1_time') }}  as q1_seconds,
-        {{ lap_time_to_seconds('q.q2_time') }}  as q2_seconds,
-        {{ lap_time_to_seconds('q.q3_time') }}  as q3_seconds
+        {{ lap_time_to_seconds('q.q1_time') }} as q1_seconds,
+        {{ lap_time_to_seconds('q.q2_time') }} as q2_seconds,
+        {{ lap_time_to_seconds('q.q3_time') }} as q3_seconds
 
-    from qualifying q
-    left join races ra
+    from qualifying as q
+    left join races as ra
         on q.race_id = ra.race_id
 )
 
 select
-    {{ dbt_utils.generate_surrogate_key(['race_id', 'driver_id']) }}    as qualifying_key,
+    {{ dbt_utils.generate_surrogate_key(['race_id', 'driver_id']) }}
+        as qualifying_key,
 
-    {{ dbt_utils.generate_surrogate_key(['race_id']) }}                 as race_key,
-    {{ dbt_utils.generate_surrogate_key(['driver_id']) }}               as driver_key,
-    {{ dbt_utils.generate_surrogate_key(['constructor_id']) }}          as constructor_key,
+    {{ dbt_utils.generate_surrogate_key(['race_id']) }} as race_key,
+    {{ dbt_utils.generate_surrogate_key(['driver_id']) }} as driver_key,
+    {{ dbt_utils.generate_surrogate_key(['constructor_id']) }}
+        as constructor_key,
     race_date_key,
 
     season,
@@ -54,9 +61,9 @@ select
             coalesce(q3_seconds, 999999)
         ),
         999999
-    )                                                                   as best_qualifying_seconds,
+    ) as best_qualifying_seconds,
 
-    (q2_seconds is not null)                                            as reached_q2,
-    (q3_seconds is not null)                                            as reached_q3
+    (q2_seconds is not null) as reached_q2,
+    (q3_seconds is not null) as reached_q3
 
 from prepared

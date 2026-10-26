@@ -1,0 +1,14 @@
+[sqlfluff]
+dialect = snowflake
+templater = dbt
+sql_file_exts = .sql
+exclude_rules = RF02, ST06, LT09
+
+[sqlfluff:templater:dbt]
+project_dir = ./f1
+
+[sqlfluff:indentation]
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower

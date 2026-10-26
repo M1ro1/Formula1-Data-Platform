@@ -6,8 +6,8 @@ with appearances as (
         d.race_date,
         d.season,
         d.round
-    from {{ ref('fct_race_results') }} r
-    inner join {{ ref('dim_race') }} d
+    from {{ ref('fct_race_results') }} as r
+    inner join {{ ref('dim_race') }} as d
         on r.race_key = d.race_key
 
 ),
@@ -45,11 +45,11 @@ stints as (
         driver_key,
         constructor_key,
         stint_number,
-        min(race_date)  as valid_from,
-        max(race_date)  as last_race_date,
-        min(season)     as first_season,
-        max(season)     as last_season,
-        count(*)        as races_in_stint
+        min(race_date) as valid_from,
+        max(race_date) as last_race_date,
+        min(season) as first_season,
+        max(season) as last_season,
+        count(*) as races_in_stint
     from numbered
     group by driver_key, constructor_key, stint_number
 
@@ -59,13 +59,16 @@ with_validity as (
 
     select
         *,
-        lead(valid_from) over (partition by driver_key order by valid_from) as valid_to
+        lead(valid_from)
+            over (partition by driver_key order by valid_from)
+            as valid_to
     from stints
 
 )
 
 select
-    {{ dbt_utils.generate_surrogate_key(['driver_key', 'valid_from']) }}    as driver_team_history_key,
+    {{ dbt_utils.generate_surrogate_key(['driver_key', 'valid_from']) }}
+        as driver_team_history_key,
     driver_key,
     constructor_key,
     stint_number,
@@ -75,6 +78,6 @@ select
     first_season,
     last_season,
     races_in_stint,
-    (valid_to is null)                                                      as is_latest_stint
+    (valid_to is null) as is_latest_stint
 
 from with_validity

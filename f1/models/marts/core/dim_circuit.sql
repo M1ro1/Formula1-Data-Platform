@@ -1,5 +1,5 @@
 with circuits as (
-    SELECT * FROM {{ ref('stg_f1_circuits') }}
+    select * from {{ ref('stg_f1_circuits') }}
 )
 
 select
@@ -7,9 +7,9 @@ select
 
     circuit_id,
     circuit_name,
-    locality            as circuit_locality,
-    country             as circuit_country,
-    latitude            as circuit_latitude,
-    longitude           as circuit_longitude
+    locality as circuit_locality,
+    country as circuit_country,
+    latitude as circuit_latitude,
+    longitude as circuit_longitude
 
 from circuits
