@@ -30,16 +30,8 @@ jobs:
           ruff check airflow/ bi/ tests/
 
       - name: SQL Linting (sqlfluff)
-        env:
-            DBT_PROFILES_DIR: ./f1/airflow_profiles
-            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-            SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-            SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-            SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-            SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-            SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
         run: |
-          sqlfluff lint f1/models --dialect snowflake
+            sqlfluff lint f1/models --dialect snowflake
 
       - name: Airflow DAG Integrity Check
         env:
