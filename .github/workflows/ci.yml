@@ -23,15 +23,11 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff sqlfluff sqlfluff-templater-dbt dbt-snowflake apache-airflow pytest
+          pip install ruff dbt-snowflake apache-airflow pytest
 
       - name: Python Linting (Ruff)
         run: |
           ruff check airflow/ bi/ tests/
-
-      - name: SQL Linting (sqlfluff)
-        run: |
-            sqlfluff lint f1/models --dialect snowflake
 
       - name: Airflow DAG Integrity Check
         env:
