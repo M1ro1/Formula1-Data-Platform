@@ -1,0 +1,54 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff sqlfluff dbt-snowflake apache-airflow pytest
+
+      - name: Python Linting (Ruff)
+        run: |
+          ruff check airflow/ dbt/
+
+      - name: SQL Linting (sqlfluff)
+        run: |
+          sqlfluff lint dbt/models --dialect snowflake
+
+      - name: Airflow DAG Integrity Check
+        env:
+          AIRFLOW__CORE__UNIT_TEST_MODE: 'True'
+        run: |
+          pytest tests/test_dag_integrity.py
+
+      - name: dbt Parse & Compile Check
+        env:
+          DBT_PROFILES_DIR: ./dbt
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+        run: |
+          cd dbt
+          dbt deps
+          dbt parse
