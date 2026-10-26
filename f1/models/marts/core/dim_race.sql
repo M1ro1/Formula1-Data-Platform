@@ -11,9 +11,9 @@ select
     race_name,
     race_date,
     race_time,
-    to_number(to_char(race_date, 'YYYYMMDD'))               as race_date_key,
+    to_number(to_char(race_date, 'YYYYMMDD')) as race_date_key,
 
-    {{ dbt_utils.generate_surrogate_key(['circuit_id']) }}  as circuit_key,
+    {{ dbt_utils.generate_surrogate_key(['circuit_id']) }} as circuit_key,
 
     first_practice_date,
     first_practice_time,

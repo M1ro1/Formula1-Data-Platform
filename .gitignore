@@ -12,3 +12,5 @@ data/
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+
+.user.yml
