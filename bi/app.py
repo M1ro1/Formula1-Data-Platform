@@ -1,8 +1,8 @@
-import streamlit as st
-import pandas as pd
+import os
+
 import plotly.express as px
 import snowflake.connector
-import os
+import streamlit as st
 
 st.set_page_config(page_title="F1 Analytics DWH", page_icon="🏎️", layout="wide")
 
@@ -47,7 +47,7 @@ with tab1:
         st.subheader("Driver Standings")
         df_drivers = run_query(f"""
             SELECT DRIVER_FULL_NAME, RACE_POINTS, RACES_ENTERED, WINS, PODIUMS, AVG_FINISH_POSITION 
-            FROM F1_DWH.MARTS.MART_DRIVER_SEASON_STATS
+            FROM MART_DRIVER_SEASON_STATS
             WHERE SEASON = {season}
             ORDER BY RACE_POINTS DESC
         """)
@@ -73,7 +73,7 @@ with tab2:
     st.header("Pit Stop Duration Analysis")
     df_pit = run_query("""
                        SELECT constructor_name, season, avg_clean_duration_seconds, median_duration_seconds
-                       FROM F1_DWH.MARTS.MART_PIT_STOP_PERFOMANCE
+                       FROM MART_PIT_STOP_PERFOMANCE
                        WHERE season >= 2020
                        ORDER BY season DESC, avg_clean_duration_seconds ASC
                        """)
