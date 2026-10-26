@@ -31,7 +31,7 @@ jobs:
 
       - name: SQL Linting (sqlfluff)
         run: |
-          sqlfluff lint dbt/models --dialect snowflake
+          sqlfluff lint f1/models --dialect snowflake
 
       - name: Airflow DAG Integrity Check
         env:
@@ -41,7 +41,7 @@ jobs:
 
       - name: dbt Parse & Compile Check
         env:
-          DBT_PROFILES_DIR: ./dbt
+          DBT_PROFILES_DIR: ./f1
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
@@ -49,6 +49,6 @@ jobs:
           SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
         run: |
-          cd dbt
+          cd f1
           dbt deps
           dbt parse
