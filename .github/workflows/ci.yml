@@ -27,7 +27,7 @@ jobs:
 
       - name: Python Linting (Ruff)
         run: |
-          ruff check airflow/ dbt/
+          ruff check airflow/ bi/ tests/
 
       - name: SQL Linting (sqlfluff)
         run: |
