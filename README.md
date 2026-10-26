@@ -2,7 +2,6 @@
 
 An end-to-end data engineering project: ingest Formula 1 data from a public API, load it into **Snowflake**, model it into a **star-schema data warehouse** with **dbt**, and orchestrate everything with **Apache Airflow**.
 
-> **Status:** 🚧 In development — see the [Roadmap](#roadmap).
 
 ---
 
@@ -11,18 +10,16 @@ An end-to-end data engineering project: ingest Formula 1 data from a public API,
 1. [Goals](#goals)
 2. [Architecture](#architecture)
 3. [Tech stack](#tech-stack)
-4. [Data source](#data-source)
-5. [Warehouse design](#warehouse-design)
-6. [Airflow DAGs](#airflow-dags)
-7. [dbt project](#dbt-project)
-8. [Data quality](#data-quality)
-9. [CI/CD](#cicd)
+4. [Dashboard preview](#dashboard-preview)
+5. [Data source](#data-source)
+6. [Warehouse design](#warehouse-design)
+7. [Airflow DAGs](#airflow-dags)
+8. [dbt project](#dbt-project)
+9. [Data quality](#data-quality)
 10. [Repository structure](#repository-structure)
 11. [Getting started](#getting-started)
 12. [Cost control](#cost-control)
 13. [Design decisions](#design-decisions)
-14. [Roadmap](#roadmap)
-15. [Example analytics questions](#example-analytics-questions)
 
 ---
 
@@ -70,13 +67,24 @@ flowchart LR
 | Data quality | dbt tests, dbt-expectations / elementary |
 | CI/CD | GitHub Actions |
 | BI | Metabase or Streamlit |
-| IaC (optional) | Terraform (Snowflake provider) |
+
+## Dashboard preview
+
+The final analytical models in `MARTS` are visualised via an interactive **Streamlit** dashboard.
+
+### Driver & constructor performance
+![Driver & Constructor Performance](docs/screenshots/driver_perfomance1.png)
+![Driver & Constructor Performance](docs/screenshots/driver_perfomance2.png)
+
+*Key insights provided by the dashboard:*
+- **Driver Standings & Trends:** Points breakdown, podium tracking, and season-by-season progression.
+- **Constructor Analytics:** Team scoring efficiency, win distributions, and reliability metrics.
+- **Telemetry & Pit Stop Efficiency:** Comparative lap-time trends and pit-stop performance over seasons.
 
 ## Data source
 
 - **Jolpica-F1 API** (Ergast-compatible): drivers, constructors, circuits, seasons, races, results, qualifying, pit stops, lap times.
 - No API key required. Always respect the API's rate limits (see the Jolpica documentation) and use retries with backoff.
-- *(Optional, later)* **OpenF1** for richer session-level data.
 
 ## Warehouse design
 
@@ -132,14 +140,12 @@ One table per API entity, storing the response as-is:
 | `f1_ingest_season_backfill` | manual, param `season` | Backfill a full season; dynamic task mapping over race rounds |
 | `f1_ingest_incremental.py` | weekly / race-weekend | Detect and load new races, results, qualifying, pit stops, lap times |
 | `f1_dbt_build` | dataset-triggered | Run dbt models via Cosmos after ingestion completes |
-| `f1_data_quality` | daily | Run freshness and volume checks, alert on failures |
 
 **Principles**
 
 - **Idempotent**: re-running a task for the same season/round never creates duplicates (delete-and-insert per partition or `MERGE`).
 - **Retries with backoff** on API calls; failures surface in Airflow, not silently.
 - **Dataset/asset-based triggering** so dbt runs only when new data landed.
-- Secrets live in Airflow Connections / environment variables, never in the repo.
 
 ## dbt project
 
@@ -170,14 +176,6 @@ dbt/
 - **Freshness**: source freshness checks on `_loaded_at`.
 - **Observability**: elementary (or dbt-expectations) for anomaly and volume checks.
 
-## CI/CD
-
-GitHub Actions workflows:
-
-- **Lint**: `sqlfluff` for SQL, `ruff` for Python DAGs.
-- **DAG integrity**: import all DAGs and fail on errors.
-- **dbt CI**: `dbt build` on pull requests into an isolated CI schema; (advanced) slim CI with `--select state:modified+`.
-- **Docs**: publish `dbt docs` to GitHub Pages.
 
 ## Repository structure
 
@@ -240,26 +238,6 @@ Then run the dbt DAG (or locally: `cd dbt && dbt deps && dbt build`).
 | Internal stage for loading | A local MinIO is not reachable from Snowflake, so files are also uploaded via `PUT` to an internal stage |
 | Cosmos for dbt | Each dbt model becomes an Airflow task: better visibility and retries |
 | Star schema | Simple, fast analytics queries and a clear modeling exercise |
-
-## Roadmap
-
-- [ ] **Phase 1 — Foundation:** repo, Docker Compose, Snowflake setup, API client
-- [ ] **Phase 2 — First vertical slice:** `races` + `results` from API to staging model
-- [ ] **Phase 3 — Full ingestion:** all entities, backfill and incremental DAGs
-- [ ] **Phase 4 — Modeling:** intermediate layer, dimensions, facts, snapshots
-- [ ] **Phase 5 — Quality & docs:** tests, freshness, dbt docs
-- [ ] **Phase 6 — Orchestration upgrade:** Cosmos, dataset-based triggering
-- [ ] **Phase 7 — CI/CD & BI:** GitHub Actions, dashboards
-- [ ] **Phase 8 — Extras:** OpenF1 data, Terraform, elementary monitoring
-
-## Example analytics questions
-
-- Which drivers have the most wins per decade?
-- How does a driver's average finishing position change when they switch teams?
-- Which constructors have the fastest average pit stops by season?
-- How strongly does grid position correlate with finishing position by circuit?
-- Which circuits have the highest DNF rate?
-
----
+|---|---|
 
 *Data provided by the Jolpica-F1 API. This project is not affiliated with Formula 1.*
