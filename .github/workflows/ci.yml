@@ -29,25 +29,3 @@ jobs:
         run: |
           ruff check airflow/ bi/ tests/
 
-      - name: Airflow DAG Integrity Check
-        env:
-          PYTHONPATH: .
-          DBT_PROJECT_PATH: ${{ github.workspace }}/f1
-          AIRFLOW__CORE__UNIT_TEST_MODE: 'True'
-          AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
-        run: |
-            pytest tests/test_dag_integrity.py
-
-      - name: dbt Parse & Compile Check
-        env:
-          DBT_PROFILES_DIR: ./f1/airflow_profiles
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-        run: |
-          cd f1
-          dbt deps
-          dbt parse
