@@ -1,0 +1,13 @@
+f1_dwh:
+  target: airflow
+  outputs:
+    airflow:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: F1_TRANSFORMER
+      warehouse: F1_WH
+      database: F1_DWH
+      schema: STAGING
+      threads: 4

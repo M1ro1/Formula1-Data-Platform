@@ -16,10 +16,12 @@ DEFAULT_ARGS = {
     "max_retry_delay": timedelta(minutes=15),
 }
 
+RAW_DATASET_URI = "snowflake://f1_dwh/raw"
+
 API_CONCURRENCY = 2
 
 LOAD_TASK_KWARGS = {
-    "max_active_tis_per_dagrun": API_CONCURRENCY,
+    "max_active_tis_per_dag": API_CONCURRENCY,
     "map_index_template": "{{ my_custom_map_index }}",
 }
 

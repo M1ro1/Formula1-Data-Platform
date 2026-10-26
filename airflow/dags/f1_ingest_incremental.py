@@ -2,11 +2,13 @@ import logging
 from datetime import date
 
 import pendulum
+from airflow.datasets import Dataset
 from airflow.decorators import dag, task
 from airflow.models.param import Param
 
 from include.dag_helpers import (
     DEFAULT_ARGS,
+    RAW_DATASET_URI,
     LOAD_TASK_KWARGS,
     build_incremental_items,
     finished_rounds,
@@ -19,6 +21,9 @@ from include.f1_client import F1Client
 log = logging.getLogger(__name__)
 
 ROUND_ENTITIES = ["results", "qualifying", "pit_stops", "laps"]
+
+
+RAW_DATASET = Dataset(RAW_DATASET_URI)
 
 
 @dag(
@@ -54,7 +59,7 @@ def f1_ingest_incremental():
     def load_one(item: dict) -> dict:
         return load_partition(item)
 
-    @task
+    @task(outlets=[RAW_DATASET])
     def summarize(results) -> dict:
         return summarize_results(results)
 

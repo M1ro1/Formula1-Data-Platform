@@ -1,10 +1,3 @@
-# Local Airflow stack: LocalExecutor + Postgres. MinIO will be added later.
-#
-# Run from the repository root:
-#   docker compose --env-file .env -f infra/docker-compose.yml up -d --build
-#
-# Airflow UI: http://localhost:8080  (user: admin, password: AIRFLOW_ADMIN_PASSWORD from .env)
-
 x-airflow-common: &airflow-common
   build:
     context: ..
@@ -25,6 +18,7 @@ x-airflow-common: &airflow-common
     - ../airflow/logs:/opt/airflow/logs
     - ../secrets:/opt/airflow/secrets:ro
     - ../data:/opt/airflow/data
+    - ../f1:/opt/airflow/dbt
 
 services:
   postgres:

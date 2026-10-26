@@ -4,40 +4,47 @@ sources:
   - name: raw_f1
     database: F1_DWH
     schema: RAW
+    loaded_at_field: _loaded_at
     tables:
       - name: races
         identifier: RAW_RACES
-        config:
-          loaded_at_field: _loaded_at
-      - name: results
-        identifier: RAW_RESULTS
-        config:
-          loaded_at_field: _loaded_at
-      - name: circuits
-        identifier: RAW_CIRCUITS
-        config:
-          loaded_at_field: _loaded_at
-      - name: constructors
-        identifier: RAW_CONSTRUCTORS
-        config:
-          loaded_at_field: _loaded_at
-      - name: drivers
-        identifier: RAW_DRIVERS
-        config:
-          loaded_at_field: _loaded_at
-      - name: laps
-        identifier: RAW_LAPS
-        config:
-          loaded_at_field: _loaded_at
-      - name: pit_stops
-        identifier: RAW_PIT_STOPS
-        config:
-          loaded_at_field: _loaded_at
-      - name: qualifying
-        identifier: RAW_QUALIFYING
-        config:
-          loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 8, period: day}
+          error_after: {count: 15, period: day}
       - name: seasons
         identifier: RAW_SEASONS
-        config:
-          loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 8, period: day}
+          error_after: {count: 15, period: day}
+      - name: drivers
+        identifier: RAW_DRIVERS
+        freshness:
+            warn_after: {count: 8, period: day}
+            error_after: {count: 15, period: day}
+      - name: constructors
+        identifier: RAW_CONSTRUCTORS
+        freshness:
+            warn_after: {count: 8, period: day}
+            error_after: {count: 15, period: day}
+      - name: circuits
+        identifier: RAW_CIRCUITS
+        freshness:
+            warn_after: {count: 8, period: day}
+            error_after: {count: 15, period: day}
+
+      - name: results
+        identifier: RAW_RESULTS
+        freshness:
+          warn_after: {count: 30, period: day}
+      - name: laps
+        identifier: RAW_LAPS
+        freshness:
+          warn_after: { count: 30, period: day }
+      - name: pit_stops
+        identifier: RAW_PIT_STOPS
+        freshness:
+          warn_after: { count: 30, period: day }
+      - name: qualifying
+        identifier: RAW_QUALIFYING
+        freshness:
+          warn_after: { count: 30, period: day }
