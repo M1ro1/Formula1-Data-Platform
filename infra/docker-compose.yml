@@ -74,5 +74,22 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  streamlit:
+    build:
+      context: ../bi
+      dockerfile: Dockerfile
+    container_name: f1_streamlit_bi
+    ports:
+      - "8501:8501"
+    environment:
+      - SNOWFLAKE_USER=${SNOWFLAKE_USER}
+      - SNOWFLAKE_PASSWORD=${SNOWFLAKE_PASSWORD}
+      - SNOWFLAKE_ACCOUNT=${SNOWFLAKE_ACCOUNT}
+      - SNOWFLAKE_WAREHOUSE=${SNOWFLAKE_WAREHOUSE:-F1_WH}
+      - SNOWFLAKE_DATABASE=${SNOWFLAKE_DATABASE:-F1_DWH}
+    volumes:
+      - ../bi:/app
+    restart: always
+
 volumes:
   postgres-data:
