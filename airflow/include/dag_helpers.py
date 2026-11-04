@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 from typing import Any
 
-from include.f1_loader import ENTITIES, load_entity
+from include.f1_loader import ENTITIES, load_entity, replay_entity
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +49,19 @@ def load_partition(item: dict[str, Any]) -> dict[str, Any]:
     except (AirflowException, KeyError, RuntimeError) as exc:
         log.debug("Skipped custom map index assignment: %s", exc)
     return load_entity(item["entity"], item.get("season"), item.get("round"))
+
+
+def replay_partition(item: dict[str, Any]) -> dict[str, Any]:
+    """Body of the mapped replay task: archive -> stage -> COPY INTO for one work item (no API call)."""
+    try:
+        from airflow.exceptions import AirflowException
+        from airflow.operators.python import get_current_context
+
+        get_current_context()["my_custom_map_index"] = label(item)
+    except (AirflowException, KeyError, RuntimeError, ImportError) as exc:
+        log.debug("Skipped custom map index assignment in replay: %s", exc)
+    return replay_entity(item["entity"], item.get("season"), item.get("round"))
+
 
 def summarize_results(results: Iterable[dict[str, Any]]) -> dict[str, int]:
     results = list(results)
@@ -139,4 +152,25 @@ def build_incremental_items(
         if done:
             todo.add(max(done))
         items.extend(make_item(entity, season, r) for r in sorted(todo))
+    return items
+
+
+def build_replay_items(
+    season: int | None,
+    entities: list[str],
+    archived_rounds_fn: Callable[[str, int], list[int]],
+) -> list[dict[str, Any]]:
+    """Work items for reloading RAW from the archive (rounds come from the archive, not the API)."""
+    items: list[dict[str, Any]] = []
+    for entity in entities:
+        level = ENTITIES[entity].level
+        if level == "global":
+            items.append(make_item(entity))
+            continue
+        if season is None:
+            raise ValueError(f"'{entity}' needs a season")
+        if level == "season":
+            items.append(make_item(entity, season))
+        else:
+            items.extend(make_item(entity, season, r) for r in archived_rounds_fn(entity, season))
     return items
