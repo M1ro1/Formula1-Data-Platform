@@ -24,13 +24,13 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
       interval: 5s
       retries: 10
     restart: unless-stopped
@@ -91,5 +91,19 @@ services:
       - ../bi:/app
     restart: always
 
+  minio:
+    image: ${MINIO_IMAGE:-pgsty/minio:latest}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${ARCHIVE_ACCESS_KEY:-f1minio}
+      MINIO_ROOT_PASSWORD: ${ARCHIVE_SECRET_KEY:-f1minio-secret}
+    ports:
+        - "9000:9000"
+        - "9001:9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
 volumes:
   postgres-data:
+  minio-data:
