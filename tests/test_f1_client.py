@@ -1,4 +1,3 @@
-"""Offline tests for F1Client pagination (no network needed)."""
 import sys
 from pathlib import Path
 

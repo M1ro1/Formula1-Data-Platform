@@ -4,10 +4,12 @@ import argparse
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from include import f1_archive
 from include.f1_client import F1Client
 
 log = logging.getLogger(__name__)
@@ -87,6 +89,19 @@ def _connect():
 
     return get_connection()
 
+def _local_path(entity: str, season: int | None, round_: int | None) -> Path:
+    return _data_dir() / "raw" / _partition(entity, season, round_) / f"{entity}.ndjson"
+
+
+def _archive_key(entity: str, season: int | None, round_: int | None) -> str:
+    """Object key in the archive bucket; mirrors the local and stage layout."""
+    return f"raw/{_partition(entity, season, round_)}/{entity}.ndjson"
+
+
+def _rounds_from_keys(keys: list[str], entity: str, season: int) -> list[int]:
+    pattern = re.compile(rf"^raw/{re.escape(entity)}/season_{int(season)}/round_(\d+)/")
+    return sorted({int(m.group(1)) for k in keys if (m := pattern.match(k))})
+
 
 def extract(
     entity: str,
@@ -101,7 +116,7 @@ def extract(
     args = [a for a in (season, round_) if a is not None]
     pages = getattr(client, spec.method)(*args)
 
-    path = _data_dir() / "raw" / _partition(entity, season, round_) / f"{entity}.ndjson"
+    path = _local_path(entity, season, round_)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     tmp = path.with_suffix(".tmp")
@@ -199,8 +214,10 @@ def load_entity(
     client: F1Client | None = None,
     conn=None,
 ) -> dict[str, Any]:
-    """extract -> upload_to_stage -> load_to_raw for a single partition."""
+    """extract -> (archive) -> upload_to_stage -> load_to_raw for a single partition."""
     path = extract(entity, season, round_, client=client)
+    if f1_archive.is_enabled():
+        f1_archive.upload_file(path, _archive_key(entity, season, round_))
     upload_to_stage(path, entity, season, round_, conn=conn)
     rows = load_to_raw(entity, season, round_, conn=conn)
     return {"entity": entity, "season": season, "round": round_, "rows": rows}
@@ -232,6 +249,45 @@ def load_season(
         if own_conn:
             conn.close()
 
+def restore_from_archive(
+    entity: str, season: int | None = None, round_: int | None = None
+) -> Path:
+    """Download a partition's file from the archive to the local data dir."""
+    _, season, round_ = _resolve(entity, season, round_)
+    return f1_archive.download_file(_archive_key(entity, season, round_), _local_path(entity, season, round_))
+
+def archived_rounds(entity: str, season: int) -> list[int]:
+    """Rounds of a season that exist in the archive (no API call needed)."""
+    keys = f1_archive.list_keys(f"raw/{entity}/season_{int(season)}/")
+    return _rounds_from_keys(keys, entity, season)
+
+def replay_entity(
+    entity: str, season: int | None = None, round_: int | None = None, conn=None
+) -> dict[str, Any]:
+    """Reload one partition into RAW from the archive: restore -> stage -> COPY INTO. No API call."""
+    _, season, round_ = _resolve(entity, season, round_)
+    path = restore_from_archive(entity, season, round_)
+    upload_to_stage(path, entity, season, round_, conn=conn)
+    rows = load_to_raw(entity, season, round_, conn=conn)
+    return {"entity": entity, "season": season, "round": round_, "rows": rows, "source": "archive"}
+
+def replay_season(entity: str, season: int | None = None, conn=None) -> list[dict[str, Any]]:
+    """Replay every archived round of a season (round-level entities) or the single partition."""
+    spec = ENTITIES[entity]
+    own_conn = conn is None
+    conn = conn or _connect()
+    try:
+        if spec.level == "round":
+            if season is None:
+                raise ValueError(f"'{entity}' needs a season")
+            rounds = archived_rounds(entity, season)
+            if not rounds:
+                raise FileNotFoundError(f"No archived files for {entity}, season {season}")
+            return [replay_entity(entity, season, r, conn=conn) for r in rounds]
+        return [replay_entity(entity, season, None, conn=conn)]
+    finally:
+        if own_conn:
+            conn.close()
 
 def _main() -> None:
     parser = argparse.ArgumentParser(description="Load F1 API data into Snowflake RAW")
@@ -239,12 +295,20 @@ def _main() -> None:
     parser.add_argument("season", nargs="?", type=int, help="omit for global entities")
     parser.add_argument("--round", type=int, dest="round_", help="single round (round-level entities)")
     parser.add_argument("--extract-only", action="store_true", help="only write the local file")
+    parser.add_argument("--from-archive", action="store_true",
+                        help="reload from the object-storage archive instead of calling the API")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     level = ENTITIES[args.entity].level
 
-    if args.extract_only:
+    if args.from_archive:
+        if args.round_ is None:
+            results = replay_season(args.entity, args.season)
+            print(f"Replayed {len(results)} partition(s), {sum(r['rows'] for r in results)} row(s) total")
+        else:
+            print(replay_entity(args.entity, args.season, args.round_))
+    elif args.extract_only:
         extract(args.entity, args.season, args.round_)
     elif level == "round" and args.round_ is None:
         results = load_season(args.entity, args.season)
