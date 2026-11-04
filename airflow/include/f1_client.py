@@ -63,7 +63,7 @@ class F1Client:
             status_forcelist=(429, 500, 502, 503, 504),
             allowed_methods=frozenset({"GET"}),
             respect_retry_after_header=True,
-            raise_on_status=False,  # we raise our own error after retries are exhausted
+            raise_on_status=False,
         )
         session = requests.Session()
         adapter = HTTPAdapter(max_retries=retry)
@@ -160,7 +160,6 @@ class F1Client:
 
 
 if __name__ == "__main__":
-    # Smoke test:  python -m include.f1_client
     logging.basicConfig(level=logging.INFO)
     client = F1Client()
     races = client.list_races(2023)
