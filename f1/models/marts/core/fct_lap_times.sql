@@ -27,8 +27,6 @@ with laps as (
 races as (
     select
         race_id,
-        season,
-        round,
         race_date_key
     from {{ ref('dim_race') }}
 )
@@ -40,8 +38,8 @@ select
     {{ dbt_utils.generate_surrogate_key(['l.driver_id']) }} as driver_key,
     ra.race_date_key,
 
-    ra.season,
-    ra.round,
+    l.season,
+    l.round,
 
     l.lap_number,
     l.position,
