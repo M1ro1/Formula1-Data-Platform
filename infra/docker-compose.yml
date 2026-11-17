@@ -7,7 +7,7 @@ x-airflow-common: &airflow-common
     - ../.env
   environment:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     PYTHONPATH: /opt/airflow
   user: "${AIRFLOW_UID:-50000}:0"
@@ -87,6 +87,7 @@ services:
       - SNOWFLAKE_ACCOUNT=${SNOWFLAKE_ACCOUNT}
       - SNOWFLAKE_WAREHOUSE=${SNOWFLAKE_WAREHOUSE:-F1_WH}
       - SNOWFLAKE_DATABASE=${SNOWFLAKE_DATABASE:-F1_DWH}
+      - SNOWFLAKE_STREAMLIT_ROLE=${SNOWFLAKE_STREAMLIT_ROLE:-F1_REPORTER}
     volumes:
       - ../bi:/app
     restart: always

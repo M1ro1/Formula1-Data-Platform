@@ -15,7 +15,8 @@ def get_snowflake_connection():
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
         warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", "F1_WH"),
         database=os.getenv("SNOWFLAKE_DATABASE", "F1_DWH"),
-        schema="MARTS"
+        schema="MARTS",
+        role=os.getenv("SNOWFLAKE_STREAMLIT_ROLE", "F1_REPORTER"),
     )
 
 

@@ -210,6 +210,8 @@ models:
               field: driver_key
       - name: race_date_key
         description: "{{ doc('race_date_key') }}"
+        tests:
+          - not_null
       - name: season
         description: "{{ doc('season') }}"
       - name: round
