@@ -36,3 +36,34 @@ jobs:
         run: |
          pytest
 
+  dbt-parse:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: f1
+    env:
+      # dbt parse never connects to Snowflake, but profiles.yml needs the vars to exist
+      SNOWFLAKE_ACCOUNT: ci-dummy
+      SNOWFLAKE_USER: ci-dummy
+      SNOWFLAKE_PASSWORD: ci-dummy
+      DBT_PROFILES_DIR: airflow_profiles
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dbt
+        run: pip install dbt-snowflake==1.12.3
+
+      - name: dbt deps
+        run: dbt deps
+
+      - name: dbt parse (catches broken Jinja, refs and YAML)
+        run: dbt parse --no-version-check
+
